@@ -12,4 +12,12 @@ Depot du projet de temps reel 4eme année au departement GEI de l'INSA Toulouse.
 
 https://www.overleaf.com/7399563661ngrrbfkhqpkf
 
+## Divers
+Le code à modifier, ainsi que l'état d'avancement est ici : Temps-Reel/software/raspberry/superviseur-robot
+
+Membres du groupe : 
+Marie Laur
+Laetitia Peraire
+Hichem Sahraoui
+
 
