@@ -11,12 +11,13 @@
 
 
 ***Etat D'avancement***\
-5   - OK  + test OK \
-6   - Manque la gestion de la camera + il faut tester\
-8   - OK  + il faut tester\
-9   - OK mais vérifier les messages + il faut tester\
-11  - OK  + il faut tester \
-13  - OK  + il faut tester\
+*nb   - Etat du code + Etat des test*
+5    - OK  + test OK \
+6    - Manque la gestion de la camera + il faut tester\
+8    - OK  + il faut tester\
+9    - OK mais vérifier les messages + il faut tester\
+11   - OK  + il faut tester \
+13   - OK  + il faut tester \
 
 
 ***Rappel*** \
@@ -25,4 +26,4 @@
 8   - Surveiller la communication entre le Robot et le Superviseur via le compteur\
 9   - Si perte alors retourner à l'etat initial\
 11  - Watchdog\
-13  - Niveau Batterie mis à jour toutes les 500ms\
+13  - Niveau Batterie mis à jour toutes les 500ms \
