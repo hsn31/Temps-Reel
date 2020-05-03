@@ -65,6 +65,7 @@ private:
     ComMonitor monitor;
     ComRobot robot;
     int robotStarted = 0;
+    int compteur=0;
     int move = MESSAGE_ROBOT_STOP;
     int watchdog = 0; // 0 = sans watchdog, 1 = avec watchdog
     
@@ -88,6 +89,7 @@ private:
     RT_MUTEX mutex_robot;
     RT_MUTEX mutex_robotStarted;
     RT_MUTEX mutex_move;
+    RT_MUTEX mutex_compteurRobot;
 
     /**********************************************************************/
     /* Semaphores                                                         */
@@ -139,9 +141,9 @@ private:
     
     void BatteryTask(void *arg);
 
-    void WatchDogTask(void *arg);
+    void WatchDog(void *arg);
 
-    void SendToRobot(void *msg);
+    Message SendRobot(Message *msg);
 
 
     /**********************************************************************/
