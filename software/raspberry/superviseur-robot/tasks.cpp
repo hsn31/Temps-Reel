@@ -293,7 +293,7 @@ void Tasks::ReceiveFromMonTask(void *arg) {
 
 //Fonctionnalité 6
 //Si perte, stopper le robot, comm avec le robot et fermer le serveur et deconnecter la camera
-	    robot.write(robot.Stop()); //A verifier en fonction de SendRobot
+	    robot.Write(robot.Stop()); //A verifier en fonction de SendRobot
 	    Stop();
 	    Init();
 	    Run();
@@ -382,7 +382,7 @@ void Tasks::StartRobotTask(void *arg) {
         cout << "Start robot without watchdog (";
         msgSend = SendRobot(robot.StartWithoutWD());
 
-	else {
+	}else {
 	
 	cout << "Start robot with watchdog (";
         msgSend = SendRobot(robot.StartWithWD());
@@ -495,7 +495,7 @@ void Tasks::WatchDog(void *arg) {
         
         rt_sem_v(&sem_watchDog);
         rt_task_wait_period(NULL); 
-    }    
+        
 }
 
 /**

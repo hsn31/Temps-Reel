@@ -143,7 +143,7 @@ private:
 
     void WatchDog(void *arg);
 
-    Message SendRobot(Message *msg);
+    Message* SendRobot(Message *msg);
 
 
     /**********************************************************************/
