@@ -11,7 +11,8 @@
 
 
 ***Etat D'avancement***\
-*nb   - Etat du code + Etat des test*
+*nb   - Etat du code + Etat des test* \
+\
 5    - OK  + test OK \
 6    - Manque la gestion de la camera + il faut tester\
 8    - OK  + il faut tester\
