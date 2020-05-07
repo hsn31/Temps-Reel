@@ -79,6 +79,10 @@ void Tasks::Init() {
         cerr << "Error mutex create: " << strerror(-err) << endl << flush;
         exit(EXIT_FAILURE);
     }
+    if (err = rt_mutex_create(&mutex_WD, NULL)) {
+        cerr << "Error mutex create: " << strerror(-err) << endl << flush;
+        exit(EXIT_FAILURE);
+    }
     cout << "Mutexes created successfully" << endl << flush;
 
     /**************************************************************************************/
@@ -133,7 +137,6 @@ void Tasks::Init() {
         cerr << "Error task create: " << strerror(-err) << endl << flush;
         exit(EXIT_FAILURE);
     }
-    
     if (err = rt_task_create(&th_battery, "th_battery", 0, PRIORITY_TBATTERY, 0)) {
         cerr << "Error task create: " << strerror(-err) << endl << flush;
         exit(EXIT_FAILURE);
@@ -186,12 +189,11 @@ void Tasks::Run() {
         cerr << "Error task start: " << strerror(-err) << endl << flush;
         exit(EXIT_FAILURE);
     }
-    
     if (err = rt_task_start(&th_battery, (void(*)(void*)) & Tasks::BatteryTask, this)) {
         cerr << "Error task start: " << strerror(-err) << endl << flush;
         exit(EXIT_FAILURE);
     }
-    if (err = rt_task_start(&th_watchDog, (void(*)(void*)) & Tasks::BatteryTask, this)) {
+    if (err = rt_task_start(&th_watchDog, (void(*)(void*)) & Tasks::WatchDog, this)) {
         cerr << "Error task start: " << strerror(-err) << endl << flush;
         exit(EXIT_FAILURE);
     }
@@ -306,11 +308,15 @@ void Tasks::ReceiveFromMonTask(void *arg) {
             rt_sem_v(&sem_openComRobot);
 
         } else if (msgRcv->CompareID(MESSAGE_ROBOT_START_WITH_WD)) {
+            rt_mutex_acquire(&mutex_WD,TM_INFINITE);
             this->watchdog = 1;
+	    rt_mutex_release(&mutex_WD);
             rt_sem_v(&sem_startRobot); //Fonctionnalité 11 //Est ce sem_watchdog ?
 
         } else if (msgRcv->CompareID(MESSAGE_ROBOT_START_WITHOUT_WD)) {
+            rt_mutex_acquire(&mutex_WD,TM_INFINITE);
 	    this->watchdog = 0;
+            rt_mutex_release(&mutex_WD);
             rt_sem_v(&sem_startRobot); //Fonctionnalité 11
 
         } else if (msgRcv->CompareID(MESSAGE_ROBOT_GO_FORWARD) ||
@@ -378,7 +384,11 @@ void Tasks::StartRobotTask(void *arg) {
 	
 	//rt_mutex_acquire(&mutex_robot, TM_INFINITE);
 
-	if(this->watchdog==0){
+        rt_mutex_acquire(&mutex_WD,TM_INFINITE);
+        int temp=watchdog;
+        rt_mutex_release(&mutex_WD);
+
+	if(temp==0){
         cout << "Start robot without watchdog (";
         msgSend = SendRobot(robot.StartWithoutWD());
 
@@ -401,7 +411,7 @@ void Tasks::StartRobotTask(void *arg) {
             robotStarted = 1;
             rt_mutex_release(&mutex_robotStarted);
 
-	    if ( this->watchdog == 1 ) {
+	    if ( temp== 1 ) {
                rt_sem_v(&sem_watchDog);
             }
         }
@@ -486,8 +496,12 @@ void Tasks::WatchDog(void *arg) {
         rt_mutex_acquire(&mutex_robotStarted, TM_INFINITE);
         int robot = robotStarted;
         rt_mutex_release(&mutex_robotStarted);
+
+        rt_mutex_acquire(&mutex_WD,TM_INFINITE);
+        int temp=watchdog;
+        rt_mutex_release(&mutex_WD);
     
-        if ( robot == 1 && watchdog==1) {
+        if ( robot == 1 && temp==1) {
             message=SendRobot(new Message(MESSAGE_ROBOT_RELOAD_WD));
            	}
 
