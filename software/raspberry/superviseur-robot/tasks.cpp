@@ -489,9 +489,9 @@ void Tasks::WatchDog(void *arg) {
     /* The task WatchDog starts here                                                 */
     /**************************************************************************************/
     rt_task_set_periodic(NULL, TM_NOW, 1000000000); //1s
-       
+    rt_sem_p(&sem_watchDog, TM_INFINITE);
+	
     while (1) {
-        rt_sem_p(&sem_watchDog, TM_INFINITE);
         
         rt_mutex_acquire(&mutex_robotStarted, TM_INFINITE);
         int robot = robotStarted;
