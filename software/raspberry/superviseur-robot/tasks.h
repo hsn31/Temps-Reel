@@ -90,6 +90,7 @@ private:
     RT_MUTEX mutex_robotStarted;
     RT_MUTEX mutex_move;
     RT_MUTEX mutex_compteurRobot;
+    RT_MUTEX mutex_WD;
 
     /**********************************************************************/
     /* Semaphores                                                         */
@@ -166,4 +167,3 @@ private:
 };
 
 #endif // __TASKS_H__ 
-
