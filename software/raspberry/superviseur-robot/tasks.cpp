@@ -275,6 +275,7 @@ void Tasks::SendToMonTask(void* arg) {
  */
 void Tasks::ReceiveFromMonTask(void *arg) {
     Message *msgRcv;
+    Message * msgSend;
     
     cout << "Start " << __PRETTY_FUNCTION__ << endl << flush;
     // Synchronization barrier (waiting that all tasks are starting)
@@ -295,25 +296,30 @@ void Tasks::ReceiveFromMonTask(void *arg) {
 
 //Fonctionnalité 6
 //Si perte, stopper le robot, comm avec le robot et fermer le serveur et deconnecter la camera
-	    robot.Write(robot.Stop()); //A verifier en fonction de SendRobot
+	    rt_mutex_acquire(&mutex_robotStarted, TM_INFINITE);
+            robotStarted = 0;
+            rt_mutex_release(&mutex_robotStarted);
+		
+	    SendRobot(robot.Stop()); 
+		
+	    cout << "Reinitialisation" << endl << flush;
 	    Stop();
 	    Init();
 	    Run();
-		//Il faut gérer la caméra......
 
-
-            delete(msgRcv);
-            exit(-1);
         } else if (msgRcv->CompareID(MESSAGE_ROBOT_COM_OPEN)) {
             rt_sem_v(&sem_openComRobot);
 
         } else if (msgRcv->CompareID(MESSAGE_ROBOT_START_WITH_WD)) {
+		
+	    cout << "Start WITH WatchDog" << endl << flush;
             rt_mutex_acquire(&mutex_WD,TM_INFINITE);
             this->watchdog = 1;
 	    rt_mutex_release(&mutex_WD);
             rt_sem_v(&sem_startRobot); //Fonctionnalité 11 //Est ce sem_watchdog ?
 
         } else if (msgRcv->CompareID(MESSAGE_ROBOT_START_WITHOUT_WD)) {
+	    cout << "Start WITHOUT WatchDog" << endl << flush;
             rt_mutex_acquire(&mutex_WD,TM_INFINITE);
 	    this->watchdog = 0;
             rt_mutex_release(&mutex_WD);
@@ -328,7 +334,17 @@ void Tasks::ReceiveFromMonTask(void *arg) {
             rt_mutex_acquire(&mutex_move, TM_INFINITE);
             move = msgRcv->GetID();
             rt_mutex_release(&mutex_move);
-        }
+		
+        }else if (msgRcv->CompareID(MESSAGE_ROBOT_RESET)) {
+            msgSend = new Message(MESSAGE_ANSWER_ACK);
+            WriteInQueue(&q_messageToMon, msgSend); 
+            
+            rt_mutex_acquire(&mutex_robotStarted, TM_INFINITE);
+            robotStarted = 0;
+            rt_mutex_release(&mutex_robotStarted);
+
+            SendRobot(robot.Reset());
+	}
         delete(msgRcv); // mus be deleted manually, no consumer
     }
 }
@@ -488,8 +504,11 @@ void Tasks::WatchDog(void *arg) {
     /**************************************************************************************/
     /* The task WatchDog starts here                                                 */
     /**************************************************************************************/
-    rt_task_set_periodic(NULL, TM_NOW, 1000000000); //1s
+   
+	//Inverser les lignes
     rt_sem_p(&sem_watchDog, TM_INFINITE);
+    rt_task_set_periodic(NULL, TM_NOW, 1000000000); //1s
+
 	
     while (1) {
         
