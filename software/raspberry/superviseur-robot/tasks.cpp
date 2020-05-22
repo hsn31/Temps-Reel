@@ -509,10 +509,10 @@ void Tasks::WatchDog(void *arg) {
     /**************************************************************************************/
     /* The task WatchDog starts here                                                 */
     /**************************************************************************************/
-   
+    rt_sem_p(&sem_watchDog, TM_INFINITE);
 	//Inverser les lignes
     rt_task_set_periodic(NULL, TM_NOW, 1000000000); //1s
-    rt_sem_p(&sem_watchDog, TM_INFINITE);
+    
     //rt_task_set_periodic(NULL, TM_NOW, 1000000000); //1s
 
 	
@@ -529,7 +529,7 @@ void Tasks::WatchDog(void *arg) {
     
         if ( robot == 1 && temp==1) {
             message=SendRobot(new Message(MESSAGE_ROBOT_RELOAD_WD));
-            cout << "Reload WatchDog sent " << msgSend->GetID() << endl << flush;
+            cout << "Reload WatchDog sent " << endl << flush;
            	}
 
         }
