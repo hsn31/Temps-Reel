@@ -341,7 +341,8 @@ void Tasks::ReceiveFromMonTask(void *arg) {
             robotStarted = 0;
             rt_mutex_release(&mutex_robotStarted);
 
-            SendRobot(robot.Reset());
+            //SendRobot(robot.Reset());
+            rt_task_set_periodic(&th_watchDog, TM_NOW, 0);
 	}
         delete(msgRcv); // mus be deleted manually, no consumer
     }
@@ -427,6 +428,7 @@ void Tasks::StartRobotTask(void *arg) {
 
 	    if ( temp== 1 ) {
                rt_sem_v(&sem_watchDog);
+             //  rt_task_set_periodic(&th_watchDog, TM_NOW, 1000000000);
             }
         }
     }
@@ -505,11 +507,11 @@ void Tasks::WatchDog(void *arg) {
    
 	//Inverser les lignes
     rt_sem_p(&sem_watchDog, TM_INFINITE);
-    rt_task_set_periodic(NULL, TM_NOW, 1000000000); //1s
+    //rt_task_set_periodic(NULL, TM_NOW, 1000000000); //1s
 
 	
     while (1) {
-        
+        rt_task_set_periodic(NULL, TM_NOW, 1000000000); //1s
         rt_mutex_acquire(&mutex_robotStarted, TM_INFINITE);
         int robot = robotStarted;
         rt_mutex_release(&mutex_robotStarted);
@@ -520,11 +522,12 @@ void Tasks::WatchDog(void *arg) {
     
         if ( robot == 1 && temp==1) {
             message=SendRobot(new Message(MESSAGE_ROBOT_RELOAD_WD));
+            
            	}
 
         }
         
-        rt_sem_v(&sem_watchDog);
+        //rt_sem_v(&sem_watchDog);
         rt_task_wait_period(NULL); 
         
 }
