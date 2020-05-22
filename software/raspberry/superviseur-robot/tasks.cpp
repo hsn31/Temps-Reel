@@ -302,10 +302,8 @@ void Tasks::ReceiveFromMonTask(void *arg) {
 		
 	    SendRobot(robot.Stop()); 
 		
-	    cout << "Reinitialisation" << endl << flush;
+	    cout << "STOP" << endl << flush;
 	    Stop();
-	    Init();
-	    Run();
 
         } else if (msgRcv->CompareID(MESSAGE_ROBOT_COM_OPEN)) {
             rt_sem_v(&sem_openComRobot);
