@@ -403,11 +403,7 @@ void Tasks::StartRobotTask(void *arg) {
         int temp=watchdog;
         rt_mutex_release(&mutex_WD);
 	    
-	rt_mutex_acquire(&mutex_robotStarted, TM_INFINITE);
-        rs = robotStarted;
-        rt_mutex_release(&mutex_robotStarted);
 
-	if (rs==1) {
 		if(temp==0){
         		cout << "Start robot without watchdog (";
         		msgSend = SendRobot(robot.StartWithoutWD());
@@ -417,7 +413,7 @@ void Tasks::StartRobotTask(void *arg) {
 			cout << "Start robot with watchdog (";
         		msgSend = SendRobot(robot.StartWithWD());
 		}
-	}
+	//}
 	//rt_mutex_release(&mutex_robot);
 
         cout << msgSend->GetID();
@@ -432,7 +428,7 @@ void Tasks::StartRobotTask(void *arg) {
             rt_mutex_release(&mutex_robotStarted);
 
 	    if ( temp== 1 ) {
-              // rt_sem_v(&sem_watchDog);
+              rt_sem_v(&sem_watchDog);
              //  rt_task_set_periodic(&th_watchDog, TM_NOW, 1000000000);
             }
         }
@@ -456,7 +452,7 @@ Message* Tasks::SendRobot(Message *msg){
     rt_mutex_release(&mutex_compteurRobot);
 
     if(message->CompareID(MESSAGE_ANSWER_ROBOT_ERROR) || message->CompareID(MESSAGE_ANSWER_NACK) ||
-            message->CompareID(MESSAGE_ANSWER_COM_ERROR)) || message->CompareID(MESSAGE_ANSWER_ROBOT_TIMEOUT)){
+            message->CompareID(MESSAGE_ANSWER_COM_ERROR) || message->CompareID(MESSAGE_ANSWER_ROBOT_TIMEOUT)){
         
         rt_mutex_acquire(&mutex_compteurRobot, TM_INFINITE);
         compteur++;
@@ -512,8 +508,9 @@ void Tasks::WatchDog(void *arg) {
     /**************************************************************************************/
    
 	//Inverser les lignes
-    //rt_sem_p(&sem_watchDog, TM_INFINITE);
     rt_task_set_periodic(NULL, TM_NOW, 1000000000); //1s
+    rt_sem_p(&sem_watchDog, TM_INFINITE);
+    //rt_task_set_periodic(NULL, TM_NOW, 1000000000); //1s
 
 	
     while (1) {
