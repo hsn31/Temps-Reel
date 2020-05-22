@@ -240,7 +240,11 @@ void Tasks::ServerTask(void *arg) {
     if (status < 0) throw std::runtime_error {
         "Unable to start server on port " + std::to_string(SERVER_PORT)
     };
+	
+    rt_mutex_acquire(&mutex_monitor, TM_INFINITE);
     monitor.AcceptClient(); // Wait the monitor client
+    rt_mutex_release(&mutex_monitor);
+    
     cout << "Rock'n'Roll baby, client accepted!" << endl << flush;
     rt_sem_broadcast(&sem_serverOk);
 }
@@ -451,8 +455,7 @@ Message* Tasks::SendRobot(Message *msg){
     cout << "TEST : COMPTEUR " << compteur << endl << flush;
     rt_mutex_release(&mutex_compteurRobot);
 
-    if(message->CompareID(MESSAGE_ANSWER_ROBOT_ERROR) || message->CompareID(MESSAGE_ANSWER_NACK) ||
-            message->CompareID(MESSAGE_ANSWER_COM_ERROR) || message->CompareID(MESSAGE_ANSWER_ROBOT_TIMEOUT)){
+    if(message->CompareID(MESSAGE_ANSWER_ROBOT_ERROR) || message->CompareID(MESSAGE_ANSWER_NACK) || message->CompareID(MESSAGE_ANSWER_ROBOT_TIMEOUT)){
         
         rt_mutex_acquire(&mutex_compteurRobot, TM_INFINITE);
         compteur++;
@@ -526,7 +529,7 @@ void Tasks::WatchDog(void *arg) {
     
         if ( robot == 1 && temp==1) {
             message=SendRobot(new Message(MESSAGE_ROBOT_RELOAD_WD));
-            
+            cout << "Reload WatchDog sent " << msgSend->GetID() << endl << flush;
            	}
 
         }
