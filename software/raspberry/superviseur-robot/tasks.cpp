@@ -341,8 +341,8 @@ void Tasks::ReceiveFromMonTask(void *arg) {
             robotStarted = 0;
             rt_mutex_release(&mutex_robotStarted);
 
-            //SendRobot(robot.Reset());
-            rt_task_set_periodic(&th_watchDog, TM_NOW, 0);
+            SendRobot(robot.Reset());
+            //rt_task_set_periodic(&th_watchDog, TM_NOW, 0);
 	}
         delete(msgRcv); // mus be deleted manually, no consumer
     }
@@ -388,7 +388,7 @@ void Tasks::StartRobotTask(void *arg) {
     cout << "Start " << __PRETTY_FUNCTION__ << endl << flush;
     // Synchronization barrier (waiting that all tasks are starting)
     rt_sem_p(&sem_barrier, TM_INFINITE);
-    
+    int rs;
     /**************************************************************************************/
     /* The task startRobot starts here                                                    */
     /**************************************************************************************/
@@ -402,17 +402,22 @@ void Tasks::StartRobotTask(void *arg) {
         rt_mutex_acquire(&mutex_WD,TM_INFINITE);
         int temp=watchdog;
         rt_mutex_release(&mutex_WD);
+	    
+	rt_mutex_acquire(&mutex_robotStarted, TM_INFINITE);
+        rs = robotStarted;
+        rt_mutex_release(&mutex_robotStarted);
 
-	if(temp==0){
-        cout << "Start robot without watchdog (";
-        msgSend = SendRobot(robot.StartWithoutWD());
+	if (rs==1) {
+		if(temp==0){
+        		cout << "Start robot without watchdog (";
+        		msgSend = SendRobot(robot.StartWithoutWD());
 
-	}else {
+		}else {
 	
-	cout << "Start robot with watchdog (";
-        msgSend = SendRobot(robot.StartWithWD());
+			cout << "Start robot with watchdog (";
+        		msgSend = SendRobot(robot.StartWithWD());
+		}
 	}
-
 	//rt_mutex_release(&mutex_robot);
 
         cout << msgSend->GetID();
@@ -427,7 +432,7 @@ void Tasks::StartRobotTask(void *arg) {
             rt_mutex_release(&mutex_robotStarted);
 
 	    if ( temp== 1 ) {
-               rt_sem_v(&sem_watchDog);
+              // rt_sem_v(&sem_watchDog);
              //  rt_task_set_periodic(&th_watchDog, TM_NOW, 1000000000);
             }
         }
@@ -450,7 +455,8 @@ Message* Tasks::SendRobot(Message *msg){
     cout << "TEST : COMPTEUR " << compteur << endl << flush;
     rt_mutex_release(&mutex_compteurRobot);
 
-    if(message->CompareID(MESSAGE_ANSWER_ROBOT_ERROR) || message->CompareID(MESSAGE_ANSWER_ROBOT_TIMEOUT)){
+    if(message->CompareID(MESSAGE_ANSWER_ROBOT_ERROR) || message->CompareID(MESSAGE_ANSWER_NACK) ||
+            message->CompareID(MESSAGE_ANSWER_COM_ERROR)) || message->CompareID(MESSAGE_ANSWER_ROBOT_TIMEOUT)){
         
         rt_mutex_acquire(&mutex_compteurRobot, TM_INFINITE);
         compteur++;
@@ -506,12 +512,13 @@ void Tasks::WatchDog(void *arg) {
     /**************************************************************************************/
    
 	//Inverser les lignes
-    rt_sem_p(&sem_watchDog, TM_INFINITE);
-    //rt_task_set_periodic(NULL, TM_NOW, 1000000000); //1s
+    //rt_sem_p(&sem_watchDog, TM_INFINITE);
+    rt_task_set_periodic(NULL, TM_NOW, 1000000000); //1s
 
 	
     while (1) {
-        rt_task_set_periodic(NULL, TM_NOW, 1000000000); //1s
+       // rt_task_set_periodic(NULL, TM_NOW, 1000000000); //1s
+	rt_task_wait_period(NULL);
         rt_mutex_acquire(&mutex_robotStarted, TM_INFINITE);
         int robot = robotStarted;
         rt_mutex_release(&mutex_robotStarted);
@@ -528,7 +535,7 @@ void Tasks::WatchDog(void *arg) {
         }
         
         //rt_sem_v(&sem_watchDog);
-        rt_task_wait_period(NULL); 
+        //rt_task_wait_period(NULL); 
         
 }
 
